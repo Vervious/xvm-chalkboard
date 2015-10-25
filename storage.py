@@ -115,7 +115,7 @@ def _key_for_session_and_allguesses(sessionID):
     return "session_allguesses_" + str(sessionID)
 
 def _key_for_session_and_guess(sessionId, randomguess):
-    return "session_guess_" + str(sessionID) + "_" + str(randomguess)
+    return "session_guess_" + str(sessionId) + "_" + str(randomguess)
 
 def _initialize_gaugestore_if_needed():
     global gaugedStore
