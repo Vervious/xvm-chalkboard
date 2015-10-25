@@ -78,7 +78,14 @@ def default_kerberos():
 
 @app.route("/results/")
 def results():
-    return str(storage.read_total_counts_for_chalkboardid("kafka"))
+    resultString = "<br/><br/>"
+    for chalkboardId in STATA_CHALKBOARDS:
+        resultString += str(chalkboardId) + "<br/>"
+        resultString += str(STATA_CHALKBOARDS[chalkboardId]) + "<br/>"
+        resultString += str(storage.read_unique_total_counts_for_chalkboardid(chalkboardId))
+        resultString += "<br/><hr/><br/><br/>"
+
+    return resultString
 
 @app.route("/results/<chalkboardId>/")
 def unique_results_for_chalkboard(chalkboardId):
