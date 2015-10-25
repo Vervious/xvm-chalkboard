@@ -13,7 +13,7 @@ gaugedStore = None
 # WRITING DATA #
 # ============ #
 
-def write_ip_and_chalkboardid(IP, chalkboardID):
+def write_chalkboardid_foruser(chalkboardID, sessionID, IP):
     """
     write the given IP and chalkboard identifier to the datastore,
     for the current time.
@@ -22,6 +22,11 @@ def write_ip_and_chalkboardid(IP, chalkboardID):
     keyValueDict = {_ip_key_for_ip(IP): 1, chalkboard_key: 1}
     _write_keyvalues(keyValueDict)
 
+def write_kerberos_foruser(kerberos, sessionID, IP):
+    pass
+
+def write_randomguess_foruser(randomguess, sessionID, IP):
+    pass
 
 def _write_keyvalues(keyvalues):
     """ 
