@@ -14,7 +14,16 @@ def index():
 # dictionary of chalkboard id:description
 # these will be relevant for the rest of the puzzle
 STATA_CHALKBOARDS = {
-    "xyz": "the main board"
+    # choice of terms probably obscure enough that people will be attracted to
+    # all equally, but relevant enough to be interesting (as opposed to random characters)
+    "kafka": "the main board",
+    "dickens": "the board to the right of the table area",
+    "flaubert": "the board to the left of the table area",
+    "vonnegut": "the big board",
+    "kerouac": "board in front of 123",
+    "bradbury": "board in front of blue thing",
+    "brautigan": "board near the mirror",
+    "murakami": "board near the restrooms"
 }
 
 # ========================== #
@@ -37,8 +46,8 @@ def parse_chalkboardOrKerberos(chalkboardIdOrKerberos):
 
 # Part 0
 def log_chalkboard(chalkboardId):
-    (sessionID, IPAddress) = id_and_ip_forcurrentsession()
-    storage.write_chalkboardid_foruser(chalkboardId, sessionID, IPAddress)
+    (sessionID, IPAddress, isFirstHit) = id_and_ip_forcurrentsession()
+    storage.write_chalkboardid_foruser(chalkboardId, sessionID, IPAddress, firstHit = isFirstHit)
     # begin the puzzle!
     return redirect(url_for('default_kerberos')) 
 
@@ -47,12 +56,12 @@ def handle_kerberos(kerberos):
     """ log the kerberos, to give us data on the chalkboard,
         and associate user id with MIT id (undergraduate, graduate, etc)
         assumes this is a valid kerberos """
-    (sessionID, IPAddress) = id_and_ip_forcurrentsession()
+    (sessionID, IPAddress, isFirstHit) = id_and_ip_forcurrentsession()
     storage.write_kerberos_foruser(kerberos, sessionID, IPAddress)
-    return "welcome to the puzzle"
+    return "Part 2. welcome to the puzzle"
 
 def log_randomguess(randomGuess):
-    (sessionID, IPAddress) = id_and_ip_forcurrentsession()
+    (sessionID, IPAddress, isFirstHit) = id_and_ip_forcurrentsession()
     storage.write_randomguess_foruser(randomGuess, sessionID, IPAddress)
     return "Trying to guess the url or something? GOOD LUCK! (or maybe your kerberos is just invalid)"
 
@@ -60,7 +69,7 @@ def log_randomguess(randomGuess):
 @app.route("/kerberos/")
 def default_kerberos():
     # try to get people to replace the kerberos in the URL with their own
-    return "look up! at the skys, the stars, and the url"
+    return "Ah. You found a puzzle. look up! at the skys, the stars, and the url"
 
 
 # ========== #
@@ -69,8 +78,13 @@ def default_kerberos():
 
 @app.route("/results/")
 def results():
-    return str(storage.read_total_counts_for_chalkboardid(1))
+    return str(storage.read_total_counts_for_chalkboardid("kafka"))
 
+@app.route("/results/<chalkboardId>/")
+def unique_results_for_chalkboard(chalkboardId):
+    if chalkboardId not in STATA_CHALKBOARDS:
+        return "chalkboard does not exist"
+    return str(storage.read_unique_total_counts_for_chalkboardid(chalkboardId))
 
 # =========== #
 # ---UTILS--- #
@@ -89,17 +103,20 @@ def information_for_kerberos(kerberos):
     return kerberos
 
 def id_and_ip_forcurrentsession():
-    """ Returns (sessionID, IP address) for the current session,
+    """ Returns (sessionID, IP address, isFirstHit) for the current session,
         generating a sessionID if it's the first time we've seen
         this user """
     SESSION_ID_KEY = 'sessionID'
     sessionID = None
+    isFirstHit = False
     if SESSION_ID_KEY in session:
         sessionID = session[SESSION_ID_KEY]
     else:
         sessionID = str(uuid.uuid4())
+        session[SESSION_ID_KEY] = sessionID
+        isFirstHit = True
     IPAddress = request.remote_addr
-    return (sessionID, IPAddress)
+    return (sessionID, IPAddress, isFirstHit)
 
 
 # ============ #
