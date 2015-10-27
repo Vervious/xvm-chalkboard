@@ -1,6 +1,6 @@
+import configerator
 from flask import Flask, redirect, url_for, session, request
 import storage
-import json
 import uuid
 import requests
 
@@ -69,7 +69,7 @@ def log_randomguess(randomGuess):
 @app.route("/kerberos/")
 def default_kerberos():
     # try to get people to replace the kerberos in the URL with their own
-    return "Ah. You found a puzzle. look up! at the skys, the stars, and the url"
+    return "Ah. You found a puzzle. look up! at the skys, the stars, and the url."
 
 
 # ========== #
@@ -92,6 +92,7 @@ def unique_results_for_chalkboard(chalkboardId):
     if chalkboardId not in STATA_CHALKBOARDS:
         return "chalkboard does not exist"
     return str(storage.read_unique_total_counts_for_chalkboardid(chalkboardId))
+
 
 # =========== #
 # ---UTILS--- #
@@ -126,21 +127,11 @@ def id_and_ip_forcurrentsession():
     return (sessionID, IPAddress, isFirstHit)
 
 
-# ============ #
-# CONFIG LOGIC #
-# ============ #
+# ====== #
+# CONFIG #
+# ====== #
 
-CONFIG_FILEPATH = './config.json'
-try:
-    configString = open(CONFIG_FILEPATH).read()
-except:
-    sys.exit('Could not load ' + CONFIG_FILEPATH + ' file')
-configDict = json.loads(configString)
-if "secret-key" not in configDict:
-    sys.exit('Could not load \'secret-key\' from config file')
-
-# set secret key for session tracking
-app.secret_key = configDict["secret-key"]
+app.secret_key = configerator.SECRET_KEY
 
 
 if __name__ == "__main__":

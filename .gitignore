@@ -1,6 +1,7 @@
 
 # Config
 config.json
+backup_storage.log
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

@@ -1,13 +1,20 @@
 """
 Handles persisting logs to a sql database,
 in an append-only fashion using gauged, found on github,
-which seems to be practical (unsure)
+which seems to be practical (unsure).
+======
+It looks like it's hard to modify stored data already in gauged,
+and we lose some relationship data when storing to it, so lets also make a backup
+and write to an append-only log which we can later use for further analysis.
 """
 
 from gauged import Gauged
+import logging
+import time
 
 gaugedStore = None
-
+logStore = None
+BACKUP_LOGFILE = "backup_storage.log"
 
 # ============ #
 # WRITING DATA #
@@ -42,6 +49,7 @@ def write_chalkboardid_foruser(chalkboardID, sessionID, IP, firstHit = False):
     _write_keyvalues(keyValueDict)
 
 def write_kerberos_foruser(kerberos, sessionID, IP):
+
     keyValueDict = {
         # collect data for an IP
         _ip_key_for_ip(IP): 1, 
@@ -69,9 +77,19 @@ def _write_keyvalues(keyvalues):
     writes the given keyvalues to the (shared) datastore,
     for the current time.
     """
-    _initialize_gaugestore_if_needed()
-    print "hello"
+    _initialize_store_if_needed()
+
+    # write to our log first
+    logString = str(int(time.time()))
+    for key in keyvalues:
+        if keyvalues[key] <= 0:
+            # only log values that contribute to the sum
+            continue
+        # tab delimited
+        logString += "\t" + str(key)
+    logStore.info(logString)
     
+    # now write to gaugedStore
     with gaugedStore.writer as writer:
         print "keyvalues: " + str(keyvalues)
         writer.add(keyvalues)
@@ -82,15 +100,27 @@ def _write_keyvalues(keyvalues):
 # ============ #
 
 def read_total_counts_for_chalkboardid(chalkboardID):
-    _initialize_gaugestore_if_needed()
+    _initialize_store_if_needed()
     total = gaugedStore.aggregate(_chalkboard_key_for_id(chalkboardID), Gauged.SUM)
     return total
 
 def read_unique_total_counts_for_chalkboardid(chalkboardID):
-    _initialize_gaugestore_if_needed()
+    _initialize_store_if_needed()
     total = gaugedStore.aggregate(_chalkboard_firsthit_key_for_id(chalkboardID), Gauged.SUM)
     return total
 
+def read_whole_log():
+    """ Don't actually use this function. For easier debugging only.
+        May contain sens1tiv3 information. Make sure to anonymise data before
+        exposing any of it. 
+        Also please don't open a huge log with this """
+    wholeLog = None
+    print "WARNING: DO NOT USE THIS FUNCTION IN PRODUCTION"
+    print "SERIOUSLY THOUGH"
+    print "HELLO"
+    with open(BACKUP_LOGFILE, 'r') as fin:
+        wholeLog = fin.read()
+    return wholeLog
 
 # ======= #
 #  UTILS  #
@@ -117,9 +147,20 @@ def _key_for_session_and_allguesses(sessionID):
 def _key_for_session_and_guess(sessionId, randomguess):
     return "session_guess_" + str(sessionId) + "_" + str(randomguess)
 
-def _initialize_gaugestore_if_needed():
+def _initialize_store_if_needed():
     global gaugedStore
+    global logStore
+    # I think gauged can deal with concurrency concerns since
+    # it's backed by MySQL; in this context it's ok if it fails too
     if gaugedStore is None:
         #print 'Initializing gauged store.'
         gaugedStore = Gauged('mysql://root@localhost/gauged_chalkboard')
         gaugedStore.sync() # initiate schema if necessary.
+    if logStore is None:
+        logStore = logging.getLogger(__name__)
+        logStore.setLevel(logging.INFO)
+        handler = logging.FileHandler(BACKUP_LOGFILE)
+        handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(message)s')
+        handler.setFormatter(formatter)
+        logStore.addHandler(handler)
