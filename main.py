@@ -3,6 +3,8 @@ from flask import Flask, redirect, url_for, session, request
 import storage
 import uuid
 import requests
+import mpld3
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -30,6 +32,7 @@ STATA_CHALKBOARDS = {
 # DATA COLLECTION AND PUZZLE #
 # ========================== #
 
+
 # Entry point and entrypoint to second part of the puzzle
 @app.route("/<chalkboardIdOrKerberos>/")
 def parse_chalkboardOrKerberos(chalkboardIdOrKerberos):
@@ -44,12 +47,14 @@ def parse_chalkboardOrKerberos(chalkboardIdOrKerberos):
     # we have a random guess
     return log_randomguess(chalkboardIdOrKerberos)
 
+
 # Part 0
 def log_chalkboard(chalkboardId):
     (sessionID, IPAddress, isFirstHit) = id_and_ip_forcurrentsession()
-    storage.write_chalkboardid_foruser(chalkboardId, sessionID, IPAddress, firstHit = isFirstHit)
+    storage.write_chalkboardid_foruser(chalkboardId, sessionID, IPAddress, firstHit=isFirstHit)
     # begin the puzzle!
-    return redirect(url_for('default_kerberos')) 
+    return redirect(url_for('default_kerberos'))
+
 
 # Part 2
 def handle_kerberos(kerberos):
@@ -60,10 +65,12 @@ def handle_kerberos(kerberos):
     storage.write_kerberos_foruser(kerberos, sessionID, IPAddress)
     return "Part 2. welcome to the puzzle"
 
+
 def log_randomguess(randomGuess):
     (sessionID, IPAddress, isFirstHit) = id_and_ip_forcurrentsession()
     storage.write_randomguess_foruser(randomGuess, sessionID, IPAddress)
     return "Trying to guess the url or something? GOOD LUCK! (or maybe your kerberos is just invalid)"
+
 
 # Part 1
 @app.route("/kerberos/")
@@ -78,6 +85,8 @@ def default_kerberos():
 
 @app.route("/results/")
 def results():
+    fig, ax = plt.subplots()
+
     resultString = "<br/><br/>"
     for chalkboardId in STATA_CHALKBOARDS:
         resultString += str(chalkboardId) + "<br/>"
@@ -85,7 +94,14 @@ def results():
         resultString += str(storage.read_unique_total_counts_for_chalkboardid(chalkboardId))
         resultString += "<br/><hr/><br/><br/>"
 
+        resultsSeries = storage.read_lastday_timeseries_for_chalkboardid(chalkboardId)
+        ax.plot(resultsSeries.dates, resultsSeries.values, label=str(chalkboardId))
+
+    ax.legend(loc=2)
+    graphHTML = mpld3.fig_to_html(fig)
+    resultString = graphHTML + "<br/>hits in the last 12 hours<br/>" + resultString
     return resultString
+
 
 @app.route("/results/<chalkboardId>/")
 def unique_results_for_chalkboard(chalkboardId):
@@ -99,7 +115,7 @@ def unique_results_for_chalkboard(chalkboardId):
 # =========== #
 
 def information_for_kerberos(kerberos):
-    """ Find information for the given kerberos. 
+    """ Find information for the given kerberos.
         if kerberos non-existent, return None """
     r = requests.get("http://m.mit.edu/apis/people/" + str(kerberos))
     kerberosInfo = r.json()
@@ -109,6 +125,7 @@ def information_for_kerberos(kerberos):
 
     # we got here: it exists!
     return kerberos
+
 
 def id_and_ip_forcurrentsession():
     """ Returns (sessionID, IP address, isFirstHit) for the current session,
