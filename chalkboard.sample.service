@@ -9,7 +9,7 @@ Type=simple
 User=benchan
 Group=www-data
 WorkingDirectory=/home/benchan/projects/chalkboard/
-ExecStart=gunicorn --workers 5 --bind unix:myproject.sock -m 007 wsgi
+ExecStart=/home/benchan/.envs/chalkboard/bin/gunicorn --workers 5 --bind unix:chalkboard.sock -m 007 wsgi
 
 StandardOutput=syslog
 StandardError=syslog
