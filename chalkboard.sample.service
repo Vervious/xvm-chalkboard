@@ -1,0 +1,23 @@
+[Unit]
+Description=Gunicorn app server for chalkboard
+Documentation=man:chalkboard(1)
+After=syslog.target
+
+[Service]
+Environment="PATH=/home/benchan/.envs/chalkboard/bin"
+Type=simple
+User=benchan
+Group=www-data
+WorkingDirectory=/home/benchan/projects/chalkboard/
+ExecStart=gunicorn --workers 5 --bind unix:myproject.sock -m 007 wsgi
+
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+RestartSec=2
+
+# Let the server start up shut down?
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target
