@@ -1,3 +1,4 @@
 {
-    "secret-key": "5Iy77Q99VK22zt85g5rcM2QsLeVw5PjhsJRz=wS;X$e@ZjTMQ<B^Av!3_Z4bEO"
+    "secret-key": "5Iy77Q99VK22zt85g5rcM2QsLeVw5PjhsJRz=wS;X$e@ZjTMQ<B^Av!3_Z4bEO",
+    "mysql-store": "mysql://username:psswrd@localhost/gauged_chalkboard"
 }

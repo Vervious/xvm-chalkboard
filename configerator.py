@@ -13,7 +13,10 @@ except:
 configDict = json.loads(configString)
 if 'secret-key' not in configDict:
     sys.exit('Could not load \'secret-key\' from config file')
+if 'mysql-store' not in configDict:
+    sys.exit('Could not load database info from config file')
 
 # set secret key for session tracking
 # also allowed to use this for other purposes
-SECRET_KEY = configDict['secret-key']
+SECRET_KEY = str(configDict['secret-key'])
+MYSQL_STORE_STRING = str(configDict['mysql-store'])

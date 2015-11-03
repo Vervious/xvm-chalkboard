@@ -11,6 +11,7 @@ backup and write to an append-only log which we can later use for further analys
 from gauged import Gauged
 import logging
 import time
+import configerator
 
 gaugedStore = None
 logStore = None
@@ -174,7 +175,7 @@ def _initialize_store_if_needed():
     # it's backed by MySQL; in this context it's ok if it fails too
     if gaugedStore is None:
         # print 'Initializing gauged store.'
-        gaugedStore = Gauged('mysql://root@localhost/gauged_chalkboard')
+        gaugedStore = Gauged(configerator.MYSQL_STORE_STRING)
         gaugedStore.sync()  # initiate schema if necessary.
     if logStore is None:
         logStore = logging.getLogger(__name__)
