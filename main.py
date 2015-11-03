@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "Hello! Some coffee was spilled on another part of this website."
+    return "Hello! Some coffee was spilled on another part of this website. Deploy test #todo"
 
 # dictionary of chalkboard id:description
 # these will be relevant for the rest of the puzzle
